@@ -34,8 +34,8 @@ class DomainEvent(ABC):
         ...     email: str
     """
 
-    event_id: str = field(default_factory=lambda: str(uuid4()))
-    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    event_id: str = field(default_factory=lambda: str(uuid4()), kw_only=True)
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc), kw_only=True)
 
     @property
     def event_type(self) -> str:
