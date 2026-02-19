@@ -1,0 +1,88 @@
+# =============================================================================
+# DDD Enterprise Template - Docker Compose
+# =============================================================================
+# Ambiente de desenvolvimento com todos os serviços necessários
+#
+# Uso:
+#   docker-compose up -d        # Inicia todos os serviços
+#   docker-compose logs -f api  # Acompanha logs da API
+#   docker-compose down         # Para todos os serviços
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ---------------------------------------------------------------------------
+  # API Principal
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ddd-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - LOG_FORMAT=console
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      # Mount para hot-reload em desenvolvimento
+      - ./src:/app/src:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - ddd-network
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL (preparado para uso futuro)
+  # ---------------------------------------------------------------------------
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: ddd-db
+  #   environment:
+  #     POSTGRES_USER: ddd_user
+  #     POSTGRES_PASSWORD: ddd_password
+  #     POSTGRES_DB: ddd_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ddd_user -d ddd_db"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - ddd-network
+
+  # ---------------------------------------------------------------------------
+  # Redis (preparado para cache/sessions)
+  # ---------------------------------------------------------------------------
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: ddd-redis
+  #   ports:
+  #     - "6379:6379"
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - ddd-network
+
+networks:
+  ddd-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
