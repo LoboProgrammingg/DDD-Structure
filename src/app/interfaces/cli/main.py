@@ -1,7 +1,11 @@
 """
 CLI para gerenciamento de tarefas.
 
-Interface de linha de comando para executar os casos de uso do sample context.
+Interface de linha de comando que utiliza o Composition Root
+para obter use cases já configurados com suas dependências.
+
+A CLI NÃO instancia dependências diretamente - usa o container.
+Isso garante consistência e facilita testes.
 """
 
 from typing import Annotated
@@ -11,47 +15,29 @@ from rich.console import Console
 from rich.table import Table
 
 from app.application.common.errors import NotFoundError
-from app.application.sample_context.use_cases import (
-    CompleteTaskUseCase,
-    CreateTaskUseCase,
-    ListTasksUseCase,
-    RenameTaskUseCase,
-)
 from app.application.sample_context.use_cases.complete_task import CompleteTaskInput
 from app.application.sample_context.use_cases.create_task import CreateTaskInput
 from app.application.sample_context.use_cases.list_tasks import ListTasksInput, TaskFilter
 from app.application.sample_context.use_cases.rename_task import RenameTaskInput
+from app.bootstrap import Container, get_container
 from app.domain.common.exceptions import DomainException, ValidationException
-from app.infrastructure.persistence.in_memory.task_repository import InMemoryTaskRepository
-from app.infrastructure.providers import SystemClock, UUIDGenerator
 
 
 app = typer.Typer(
     name="task-cli",
-    help="CLI para gerenciamento de tarefas - Demonstração DDD",
+    help="CLI para gerenciamento de tarefas - DDD Enterprise Template",
     add_completion=False,
 )
 console = Console()
 
-# Singleton para manter estado entre comandos (em produção seria um banco real)
-_repository = InMemoryTaskRepository()
-_clock = SystemClock()
-_id_generator = UUIDGenerator()
 
+def get_cli_container() -> Container:
+    """
+    Obtém o container de dependências para a CLI.
 
-def get_repository() -> InMemoryTaskRepository:
-    """Retorna a instância do repositório."""
-    return _repository
-
-
-def get_clock() -> SystemClock:
-    """Retorna a instância do clock."""
-    return _clock
-
-
-def get_id_generator() -> UUIDGenerator:
-    """Retorna a instância do gerador de IDs."""
-    return _id_generator
+    Centraliza a obtenção do container, facilitando testes.
+    """
+    return get_container()
 
 
 @app.command("create")
@@ -65,14 +51,10 @@ def create_task(
     ] = "",
 ) -> None:
     """Cria uma nova tarefa."""
-    try:
-        use_case = CreateTaskUseCase(
-            repository=get_repository(),
-            clock=get_clock(),
-            id_generator=get_id_generator(),
-        )
+    container = get_cli_container()
 
-        output = use_case.execute(
+    try:
+        output = container.create_task_use_case.execute(
             CreateTaskInput(
                 title=title,
                 priority=priority,
@@ -80,7 +62,7 @@ def create_task(
             )
         )
 
-        console.print(f"[green]✓ Tarefa criada com sucesso![/green]")
+        console.print("[green]✓ Tarefa criada com sucesso![/green]")
         console.print(f"  ID: {output.id}")
         console.print(f"  Título: {output.title}")
         console.print(f"  Prioridade: {output.priority}")
@@ -101,14 +83,15 @@ def list_tasks(
     ] = "all",
 ) -> None:
     """Lista todas as tarefas."""
+    container = get_cli_container()
+
     try:
         task_filter = TaskFilter(filter_status)
     except ValueError:
-        console.print(f"[red]✗ Filtro inválido. Use: all, pending, completed[/red]")
+        console.print("[red]✗ Filtro inválido. Use: all, pending, completed[/red]")
         raise typer.Exit(1)
 
-    use_case = ListTasksUseCase(repository=get_repository())
-    output = use_case.execute(ListTasksInput(filter=task_filter))
+    output = container.list_tasks_use_case.execute(ListTasksInput(filter=task_filter))
 
     if output.total == 0:
         console.print("[yellow]Nenhuma tarefa encontrada.[/yellow]")
@@ -152,15 +135,14 @@ def complete_task(
     task_id: Annotated[str, typer.Argument(help="ID da tarefa")],
 ) -> None:
     """Marca uma tarefa como concluída."""
+    container = get_cli_container()
+
     try:
-        use_case = CompleteTaskUseCase(
-            repository=get_repository(),
-            clock=get_clock(),
+        output = container.complete_task_use_case.execute(
+            CompleteTaskInput(task_id=task_id)
         )
 
-        output = use_case.execute(CompleteTaskInput(task_id=task_id))
-
-        console.print(f"[green]✓ Tarefa concluída![/green]")
+        console.print("[green]✓ Tarefa concluída![/green]")
         console.print(f"  Título: {output.title}")
         console.print(f"  Concluída em: {output.completed_at}")
 
@@ -178,17 +160,17 @@ def rename_task(
     new_title: Annotated[str, typer.Argument(help="Novo título")],
 ) -> None:
     """Renomeia uma tarefa."""
-    try:
-        use_case = RenameTaskUseCase(repository=get_repository())
+    container = get_cli_container()
 
-        output = use_case.execute(
+    try:
+        output = container.rename_task_use_case.execute(
             RenameTaskInput(
                 task_id=task_id,
                 new_title=new_title,
             )
         )
 
-        console.print(f"[green]✓ Tarefa renomeada![/green]")
+        console.print("[green]✓ Tarefa renomeada![/green]")
         console.print(f"  De: {output.old_title}")
         console.print(f"  Para: {output.new_title}")
 
@@ -206,7 +188,9 @@ def rename_task(
 @app.command("demo")
 def demo() -> None:
     """Executa uma demonstração criando algumas tarefas."""
-    console.print("[bold blue]🚀 Executando demonstração do DDD Template[/bold blue]\n")
+    container = get_cli_container()
+
+    console.print("[bold blue]🚀 Executando demonstração do DDD Enterprise Template[/bold blue]\n")
 
     # Criar algumas tarefas de exemplo
     tasks_data = [
@@ -220,12 +204,7 @@ def demo() -> None:
 
     console.print("[bold]Criando tarefas de exemplo...[/bold]")
     for title, priority, description in tasks_data:
-        use_case = CreateTaskUseCase(
-            repository=get_repository(),
-            clock=get_clock(),
-            id_generator=get_id_generator(),
-        )
-        output = use_case.execute(
+        output = container.create_task_use_case.execute(
             CreateTaskInput(title=title, priority=priority, description=description)
         )
         created_ids.append(output.id)
@@ -236,12 +215,10 @@ def demo() -> None:
     # Completar uma tarefa
     if created_ids:
         console.print("[bold]Completando uma tarefa...[/bold]")
-        complete_use_case = CompleteTaskUseCase(
-            repository=get_repository(),
-            clock=get_clock(),
+        container.complete_task_use_case.execute(
+            CompleteTaskInput(task_id=created_ids[1])
         )
-        complete_use_case.execute(CompleteTaskInput(task_id=created_ids[1]))
-        console.print(f"  [green]✓[/green] Tarefa completada\n")
+        console.print("  [green]✓[/green] Tarefa completada\n")
 
     # Listar todas as tarefas
     console.print("[bold]Listando todas as tarefas:[/bold]")
