@@ -1,19 +1,23 @@
 # ============================================================================
-# DDD Python Template - Makefile
+# DDD Enterprise Template - Makefile
 # ============================================================================
-# Comandos úteis para desenvolvimento
+# Comandos para desenvolvimento, testes, build e deploy
 #
 # Uso:
-#   make install    - Instala dependências com Poetry
-#   make test       - Executa todos os testes
-#   make lint       - Executa linting com Ruff
-#   make format     - Formata código com Black e Ruff
-#   make typecheck  - Verifica tipos com MyPy
-#   make check      - Executa todos os checks (lint, format, typecheck, test)
-#   make clean      - Remove arquivos temporários
+#   make install      - Instala dependências com Poetry
+#   make test         - Executa todos os testes
+#   make lint         - Executa linting com Ruff
+#   make format       - Formata código com Black e Ruff
+#   make typecheck    - Verifica tipos com MyPy
+#   make check        - Executa todos os checks
+#   make run-api      - Inicia API FastAPI
+#   make run-cli      - Executa CLI demo
+#   make docker-build - Build da imagem Docker
+#   make docker-up    - Inicia containers
 # ============================================================================
 
 .PHONY: install test test-unit test-integration lint format typecheck check clean pre-commit help
+.PHONY: run-api run-cli docker-build docker-up docker-down docker-logs
 
 # Cores para output
 BLUE := \033[0;34m
@@ -110,14 +114,47 @@ pre-commit: ## Executa pre-commit em todos os arquivos
 	@echo "$(GREEN)✓ Pre-commit concluído!$(NC)"
 
 # ============================================================================
-# CLI
+# Executar Aplicação
 # ============================================================================
 
-cli: ## Executa a CLI do sample domain
+run-api: ## Inicia API FastAPI em modo desenvolvimento
+	@echo "$(BLUE)🚀 Iniciando API...$(NC)"
+	poetry run uvicorn app.interfaces.api.main:app --reload --host 0.0.0.0 --port 8000
+
+run-cli: ## Executa demonstração da CLI
+	@echo "$(BLUE)🚀 Executando CLI demo...$(NC)"
+	poetry run task-cli demo
+
+cli: ## Executa a CLI interativa
 	poetry run task-cli
 
 cli-help: ## Mostra ajuda da CLI
 	poetry run task-cli --help
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+docker-build: ## Build da imagem Docker
+	@echo "$(BLUE)🐳 Building Docker image...$(NC)"
+	docker build -t ddd-template:latest .
+	@echo "$(GREEN)✓ Build concluído!$(NC)"
+
+docker-up: ## Inicia containers com docker-compose
+	@echo "$(BLUE)🐳 Iniciando containers...$(NC)"
+	docker-compose up -d
+	@echo "$(GREEN)✓ Containers iniciados!$(NC)"
+
+docker-down: ## Para containers
+	@echo "$(YELLOW)🐳 Parando containers...$(NC)"
+	docker-compose down
+	@echo "$(GREEN)✓ Containers parados!$(NC)"
+
+docker-logs: ## Mostra logs dos containers
+	docker-compose logs -f
+
+docker-shell: ## Acessa shell do container API
+	docker-compose exec api /bin/bash
 
 # ============================================================================
 # Limpeza
