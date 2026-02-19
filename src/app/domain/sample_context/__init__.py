@@ -8,5 +8,7 @@ Contém:
 - Task: entidade principal
 - Value Objects: TaskTitle, TaskDescription, TaskPriority, TaskStatus
 - Domain Events: TaskCreated, TaskCompleted, TaskRenamed
-- Repository Interface: TaskRepository
+
+NOTA: Interfaces de Repository ficam na camada Application (ports),
+não no Domain. O Domain é 100% puro e focado em regras de negócio.
 """

@@ -3,10 +3,13 @@ Implementação in-memory do repositório de tarefas.
 
 Armazena tarefas em memória usando um dicionário.
 Útil para testes e desenvolvimento local.
+
+Esta é uma implementação (Adapter) do Port definido na camada de aplicação.
+Infraestrutura implementa interfaces da Application, não do Domain.
 """
 
+from app.application.sample_context.ports.repositories import TaskRepository
 from app.domain.sample_context.entities.task import Task
-from app.domain.sample_context.repositories.task_repository import TaskRepository
 from app.domain.sample_context.value_objects import TaskId
 from app.domain.sample_context.value_objects.task_status import StatusValue
 
