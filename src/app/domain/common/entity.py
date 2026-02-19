@@ -6,7 +6,7 @@ Duas entidades são iguais se possuem o mesmo ID, independente de seus atributos
 """
 
 from abc import ABC
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 
 if TYPE_CHECKING:

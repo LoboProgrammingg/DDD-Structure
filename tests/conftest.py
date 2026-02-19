@@ -5,7 +5,7 @@ Este arquivo é carregado automaticamente pelo pytest e contém
 fixtures que podem ser usadas em todos os testes.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -16,7 +16,7 @@ class FakeClock(Clock):
     """Clock falso para testes que permite controlar o tempo."""
 
     def __init__(self, fixed_time: datetime | None = None) -> None:
-        self._time = fixed_time or datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+        self._time = fixed_time or datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
 
     def now(self) -> datetime:
         return self._time

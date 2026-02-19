@@ -7,13 +7,9 @@ São imutáveis e capturam o momento em que ocorreram.
 
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
-
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True)
@@ -35,7 +31,7 @@ class DomainEvent(ABC):
     """
 
     event_id: str = field(default_factory=lambda: str(uuid4()), kw_only=True)
-    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc), kw_only=True)
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC), kw_only=True)
 
     @property
     def event_type(self) -> str:

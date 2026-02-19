@@ -16,6 +16,7 @@ Regra de dependência:
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from app.domain.sample_context.entities.task import Task
     from app.domain.sample_context.value_objects.task_id import TaskId

@@ -18,7 +18,6 @@ Uso:
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING
 
 from app.application.sample_context.ports import Clock, IdGenerator, TaskRepositoryPort
 from app.application.sample_context.use_cases import (
@@ -33,9 +32,6 @@ from app.infrastructure.messaging import EventDispatcher
 from app.infrastructure.persistence.in_memory.task_repository import InMemoryTaskRepository
 from app.infrastructure.providers import SystemClock, UUIDGenerator
 
-
-if TYPE_CHECKING:
-    pass
 
 logger = get_logger(__name__)
 

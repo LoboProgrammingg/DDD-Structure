@@ -48,9 +48,7 @@ class InMemoryTaskRepository(TaskRepository):
     def find_completed(self) -> list[Task]:
         """Retorna tarefas concluídas."""
         return [
-            task
-            for task in self._tasks.values()
-            if task.status.status == StatusValue.COMPLETED
+            task for task in self._tasks.values() if task.status.status == StatusValue.COMPLETED
         ]
 
     def delete(self, task_id: TaskId) -> bool:

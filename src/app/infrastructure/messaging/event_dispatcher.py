@@ -21,7 +21,8 @@ Fluxo típico:
 import asyncio
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Callable, Generic, TypeVar
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar
 
 from app.domain.common.events import DomainEvent
 from app.infrastructure.logging import get_logger

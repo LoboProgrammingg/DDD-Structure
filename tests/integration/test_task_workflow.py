@@ -90,9 +90,7 @@ class TestTaskWorkflow:
             repository=repository,
             clock=clock,
         )
-        completed = complete_use_case.execute(
-            CompleteTaskInput(task_id=created.id)
-        )
+        completed = complete_use_case.execute(CompleteTaskInput(task_id=created.id))
 
         assert completed.status == "completed"
         assert completed.completed_at is not None
@@ -101,16 +99,12 @@ class TestTaskWorkflow:
         list_use_case = ListTasksUseCase(repository=repository)
 
         # Lista completas
-        completed_list = list_use_case.execute(
-            ListTasksInput(filter=TaskFilter.COMPLETED)
-        )
+        completed_list = list_use_case.execute(ListTasksInput(filter=TaskFilter.COMPLETED))
         assert completed_list.total == 1
         assert completed_list.tasks[0].title == "Tarefa renomeada"
 
         # Lista pendentes (deve estar vazia)
-        pending_list = list_use_case.execute(
-            ListTasksInput(filter=TaskFilter.PENDING)
-        )
+        pending_list = list_use_case.execute(ListTasksInput(filter=TaskFilter.PENDING))
         assert pending_list.total == 0
 
     @pytest.mark.integration
@@ -139,9 +133,7 @@ class TestTaskWorkflow:
         rename_use_case = RenameTaskUseCase(repository=repository)
 
         with pytest.raises(BusinessRuleViolationException):
-            rename_use_case.execute(
-                RenameTaskInput(task_id=created.id, new_title="Novo título")
-            )
+            rename_use_case.execute(RenameTaskInput(task_id=created.id, new_title="Novo título"))
 
     @pytest.mark.integration
     def test_multiple_tasks_workflow(
@@ -182,14 +174,10 @@ class TestTaskWorkflow:
         all_tasks = list_use_case.execute(ListTasksInput(filter=TaskFilter.ALL))
         assert all_tasks.total == 5
 
-        completed_tasks = list_use_case.execute(
-            ListTasksInput(filter=TaskFilter.COMPLETED)
-        )
+        completed_tasks = list_use_case.execute(ListTasksInput(filter=TaskFilter.COMPLETED))
         assert completed_tasks.total == 2
 
-        pending_tasks = list_use_case.execute(
-            ListTasksInput(filter=TaskFilter.PENDING)
-        )
+        pending_tasks = list_use_case.execute(ListTasksInput(filter=TaskFilter.PENDING))
         assert pending_tasks.total == 3
 
     @pytest.mark.integration
@@ -205,15 +193,11 @@ class TestTaskWorkflow:
             clock=clock,
             id_generator=id_generator,
         )
-        created = create_use_case.execute(
-            CreateTaskInput(title="Tarefa original")
-        )
+        created = create_use_case.execute(CreateTaskInput(title="Tarefa original"))
 
         # Renomear
         rename_use_case = RenameTaskUseCase(repository=repository)
-        rename_use_case.execute(
-            RenameTaskInput(task_id=created.id, new_title="Tarefa modificada")
-        )
+        rename_use_case.execute(RenameTaskInput(task_id=created.id, new_title="Tarefa modificada"))
 
         # Verificar que a mudança foi persistida
         list_use_case = ListTasksUseCase(repository=repository)

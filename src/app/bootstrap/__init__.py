@@ -18,7 +18,7 @@ Por que isso é importante?
 - Permite trocar implementações facilmente
 """
 
-from app.bootstrap.container import Container, create_container
+from app.bootstrap.container import Container, create_container, get_container, reset_container
 
 
-__all__ = ["Container", "create_container"]
+__all__ = ["Container", "create_container", "get_container", "reset_container"]

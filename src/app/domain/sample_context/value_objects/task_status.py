@@ -2,8 +2,8 @@
 
 from enum import Enum
 
-from app.domain.common.value_object import ValueObject
 from app.domain.common.exceptions import ValidationException
+from app.domain.common.value_object import ValueObject
 
 
 class StatusValue(Enum):
@@ -42,7 +42,7 @@ class TaskStatus(ValueObject):
                 raise ValidationException(
                     f"Status inválido. Valores válidos: {valid}",
                     field="Status",
-                )
+                ) from None
         object.__setattr__(self, "_status", status)
 
     @property

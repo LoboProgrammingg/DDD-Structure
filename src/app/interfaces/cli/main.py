@@ -138,9 +138,7 @@ def complete_task(
     container = get_cli_container()
 
     try:
-        output = container.complete_task_use_case.execute(
-            CompleteTaskInput(task_id=task_id)
-        )
+        output = container.complete_task_use_case.execute(CompleteTaskInput(task_id=task_id))
 
         console.print("[green]✓ Tarefa concluída![/green]")
         console.print(f"  Título: {output.title}")
@@ -215,9 +213,7 @@ def demo() -> None:
     # Completar uma tarefa
     if created_ids:
         console.print("[bold]Completando uma tarefa...[/bold]")
-        container.complete_task_use_case.execute(
-            CompleteTaskInput(task_id=created_ids[1])
-        )
+        container.complete_task_use_case.execute(CompleteTaskInput(task_id=created_ids[1]))
         console.print("  [green]✓[/green] Tarefa completada\n")
 
     # Listar todas as tarefas

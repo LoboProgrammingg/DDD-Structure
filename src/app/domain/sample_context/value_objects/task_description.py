@@ -1,7 +1,7 @@
 """TaskDescription - Descrição de uma tarefa."""
 
-from app.domain.common.value_object import ValueObject
 from app.domain.common.validators import Validator
+from app.domain.common.value_object import ValueObject
 
 
 class TaskDescription(ValueObject):

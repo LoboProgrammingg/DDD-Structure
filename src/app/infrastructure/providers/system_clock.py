@@ -2,7 +2,7 @@
 Implementação do Clock usando o relógio do sistema.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.application.sample_context.ports import Clock
 
@@ -16,4 +16,4 @@ class SystemClock(Clock):
 
     def now(self) -> datetime:
         """Retorna a data/hora atual em UTC."""
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)

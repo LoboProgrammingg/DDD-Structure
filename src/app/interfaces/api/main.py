@@ -11,8 +11,9 @@ Controllers apenas:
 NENHUMA lógica de negócio aqui. Tudo vai para os Use Cases.
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -80,6 +81,7 @@ def create_app() -> FastAPI:
 # Health Check Router
 # =============================================================================
 from fastapi import APIRouter
+
 
 health_router = APIRouter()
 
@@ -204,9 +206,7 @@ async def list_tasks(
             detail={"message": "Filtro inválido. Use: all, pending, completed"},
         )
 
-    output = container.list_tasks_use_case.execute(
-        ListTasksInput(filter=task_filter)
-    )
+    output = container.list_tasks_use_case.execute(ListTasksInput(filter=task_filter))
 
     return TaskListResponse(
         tasks=[
@@ -231,9 +231,7 @@ async def complete_task(task_id: str) -> MessageResponse:
     container = get_container()
 
     try:
-        output = container.complete_task_use_case.execute(
-            CompleteTaskInput(task_id=task_id)
-        )
+        output = container.complete_task_use_case.execute(CompleteTaskInput(task_id=task_id))
 
         return MessageResponse(
             message="Tarefa concluída com sucesso",

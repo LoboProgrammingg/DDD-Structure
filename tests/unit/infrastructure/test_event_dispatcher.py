@@ -2,7 +2,6 @@
 Testes unitários para o Event Dispatcher.
 """
 
-from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest

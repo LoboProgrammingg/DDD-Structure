@@ -59,6 +59,10 @@ select = [
 ignore = [
     "PLR0913",  # Too many arguments
     "PLR2004",  # Magic value comparison
+    "PLW0603",  # Using global statement (needed for singleton container)
+    "ARG001",   # Unused function argument (common in interfaces/lifecycle hooks)
+    "RUF012",   # Mutable class attributes (logger patterns)
+    "E402",     # Module level import not at top (needed for FastAPI lifespan)
 ]
 
 [tool.ruff.lint.isort]
@@ -68,6 +72,7 @@ lines-after-imports = 2
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = ["ARG", "PLR2004"]
+"src/app/interfaces/**/*" = ["B904"]  # raise from not needed for HTTP/CLI exceptions
 
 # ============================================================================
 # BLACK - Code Formatting

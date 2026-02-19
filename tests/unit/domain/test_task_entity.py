@@ -2,7 +2,7 @@
 Testes unitários para a entidade Task.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -17,7 +17,6 @@ from app.domain.sample_context.value_objects import (
     TaskDescription,
     TaskId,
     TaskPriority,
-    TaskStatus,
     TaskTitle,
 )
 
@@ -31,7 +30,7 @@ class TestTaskCreation:
         task_id = TaskId("task-001")
         title = TaskTitle("Minha tarefa")
         priority = TaskPriority.high()
-        created_at = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+        created_at = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
 
         # Act
         task = Task.create(
@@ -60,7 +59,7 @@ class TestTaskCreation:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             description=description,
         )
 
@@ -75,7 +74,7 @@ class TestTaskCreation:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Assert
@@ -96,7 +95,7 @@ class TestTaskRename:
             id=TaskId("task-001"),
             title=TaskTitle("Título original"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task.clear_events()  # Limpa evento de criação
 
@@ -113,7 +112,7 @@ class TestTaskRename:
             id=TaskId("task-001"),
             title=TaskTitle("Título original"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task.clear_events()
 
@@ -134,7 +133,7 @@ class TestTaskRename:
             id=TaskId("task-001"),
             title=TaskTitle("Título"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task.clear_events()
 
@@ -151,9 +150,9 @@ class TestTaskRename:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
-        task.complete(datetime.now(timezone.utc))
+        task.complete(datetime.now(UTC))
 
         # Act & Assert
         with pytest.raises(BusinessRuleViolationException) as exc_info:
@@ -172,9 +171,9 @@ class TestTaskComplete:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
-        completed_at = datetime(2024, 1, 20, 15, 0, 0, tzinfo=timezone.utc)
+        completed_at = datetime(2024, 1, 20, 15, 0, 0, tzinfo=UTC)
 
         # Act
         task.complete(completed_at)
@@ -191,12 +190,12 @@ class TestTaskComplete:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task.clear_events()
 
         # Act
-        task.complete(datetime.now(timezone.utc))
+        task.complete(datetime.now(UTC))
 
         # Assert
         events = task.domain_events
@@ -211,13 +210,13 @@ class TestTaskComplete:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
-        task.complete(datetime.now(timezone.utc))
+        task.complete(datetime.now(UTC))
 
         # Act & Assert
         with pytest.raises(BusinessRuleViolationException):
-            task.complete(datetime.now(timezone.utc))
+            task.complete(datetime.now(UTC))
 
     @pytest.mark.unit
     def test_cannot_complete_cancelled_task(self) -> None:
@@ -226,13 +225,13 @@ class TestTaskComplete:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task.cancel()
 
         # Act & Assert
         with pytest.raises(BusinessRuleViolationException):
-            task.complete(datetime.now(timezone.utc))
+            task.complete(datetime.now(UTC))
 
 
 class TestTaskStart:
@@ -245,7 +244,7 @@ class TestTaskStart:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Act
@@ -262,9 +261,9 @@ class TestTaskStart:
             id=TaskId("task-001"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
-        task.complete(datetime.now(timezone.utc))
+        task.complete(datetime.now(UTC))
 
         # Act & Assert
         with pytest.raises(BusinessRuleViolationException):
@@ -281,13 +280,13 @@ class TestTaskEquality:
             id=TaskId("same-id"),
             title=TaskTitle("Tarefa 1"),
             priority=TaskPriority.low(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task2 = Task.create(
             id=TaskId("same-id"),
             title=TaskTitle("Tarefa 2"),  # título diferente
             priority=TaskPriority.high(),  # prioridade diferente
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Act & Assert
@@ -300,13 +299,13 @@ class TestTaskEquality:
             id=TaskId("id-1"),
             title=TaskTitle("Tarefa"),
             priority=TaskPriority.medium(),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         task2 = Task.create(
             id=TaskId("id-2"),
             title=TaskTitle("Tarefa"),  # mesmo título
             priority=TaskPriority.medium(),  # mesma prioridade
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Act & Assert

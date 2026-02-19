@@ -2,8 +2,8 @@
 
 from enum import Enum
 
-from app.domain.common.value_object import ValueObject
 from app.domain.common.exceptions import ValidationException
+from app.domain.common.value_object import ValueObject
 
 
 class PriorityLevel(Enum):
@@ -42,7 +42,7 @@ class TaskPriority(ValueObject):
                 raise ValidationException(
                     f"Prioridade inválida. Valores válidos: {valid}",
                     field="Prioridade",
-                )
+                ) from None
         object.__setattr__(self, "_level", level)
 
     @property

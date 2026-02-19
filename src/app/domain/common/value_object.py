@@ -41,9 +41,7 @@ class ValueObject(ABC):
     def __setattr__(self, name: str, value: Any) -> None:
         """Impede modificação de atributos após criação."""
         if hasattr(self, name):
-            raise AttributeError(
-                f"Value Object é imutável. Não é possível alterar '{name}'."
-            )
+            raise AttributeError(f"Value Object é imutável. Não é possível alterar '{name}'.")
         object.__setattr__(self, name, value)
 
     def __delattr__(self, name: str) -> None:

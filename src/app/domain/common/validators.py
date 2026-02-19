@@ -6,8 +6,7 @@ Use estes validadores dentro de entidades e value objects.
 """
 
 import re
-from typing import Any, TypeVar
-
+from typing import TypeVar
 
 from app.domain.common.exceptions import ValidationException
 
@@ -92,7 +91,9 @@ class Validator:
         return value
 
     @staticmethod
-    def in_range(value: int | float, min_val: int | float, max_val: int | float, field_name: str) -> int | float:
+    def in_range(
+        value: int | float, min_val: int | float, max_val: int | float, field_name: str
+    ) -> int | float:
         """
         Valida que um número está dentro de um intervalo.
 
@@ -136,7 +137,9 @@ class Validator:
         return value
 
     @staticmethod
-    def matches_pattern(value: str, pattern: str, field_name: str, message: str | None = None) -> str:
+    def matches_pattern(
+        value: str, pattern: str, field_name: str, message: str | None = None
+    ) -> str:
         """
         Valida que uma string corresponde a um padrão regex.
 

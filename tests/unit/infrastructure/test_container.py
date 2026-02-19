@@ -38,9 +38,7 @@ def container(test_settings: Settings) -> Container:
 class TestContainer:
     """Testes para o Container de dependências."""
 
-    def test_should_create_container_with_settings(
-        self, test_settings: Settings
-    ) -> None:
+    def test_should_create_container_with_settings(self, test_settings: Settings) -> None:
         # Act
         container = create_container(test_settings)
 
@@ -103,9 +101,7 @@ class TestContainer:
         # Assert
         assert isinstance(use_case, ListTasksUseCase)
 
-    def test_should_return_same_instance_for_cached_properties(
-        self, container: Container
-    ) -> None:
+    def test_should_return_same_instance_for_cached_properties(self, container: Container) -> None:
         # Act
         clock1 = container.clock
         clock2 = container.clock
@@ -113,9 +109,7 @@ class TestContainer:
         # Assert
         assert clock1 is clock2
 
-    def test_should_use_same_repository_across_use_cases(
-        self, container: Container
-    ) -> None:
+    def test_should_use_same_repository_across_use_cases(self, container: Container) -> None:
         # Act
         create_uc = container.create_task_use_case
         list_uc = container.list_tasks_use_case

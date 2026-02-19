@@ -167,9 +167,7 @@ class TestRenameTaskUseCase:
 
         # Act & Assert
         with pytest.raises(NotFoundError):
-            use_case.execute(
-                RenameTaskInput(task_id="nonexistent", new_title="Novo")
-            )
+            use_case.execute(RenameTaskInput(task_id="nonexistent", new_title="Novo"))
 
 
 class TestListTasksUseCase:
