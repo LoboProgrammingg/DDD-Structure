@@ -1,0 +1,39 @@
+# EditorConfig - https://editorconfig.org
+# Este arquivo define estilos de codificação consistentes para o projeto
+
+root = true
+
+# Configuração padrão para todos os arquivos
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# TOML
+[*.toml]
+indent_size = 4
+
+# JSON
+[*.json]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+indent_size = 2
+
+# Makefile (requer tabs)
+[Makefile]
+indent_style = tab
