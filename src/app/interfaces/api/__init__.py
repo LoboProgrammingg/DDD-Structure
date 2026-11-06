@@ -1,6 +1,3 @@
-"""
-Interface de API REST.
+from app.interfaces.api.app import create_app
 
-Contém endpoints HTTP para interagir com a aplicação.
-(Opcional - implemente conforme necessidade do projeto)
-"""
+__all__ = ["create_app"]
