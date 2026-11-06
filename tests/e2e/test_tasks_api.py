@@ -83,7 +83,7 @@ async def test_invariant_violation_returns_problem_details(client: AsyncClient) 
     assert response.headers["content-type"] == "application/problem+json"
     assert response.json() == {
         "type": "about:blank",
-        "title": "Unprocessable Entity",
+        "title": "Unprocessable Content",
         "status": 422,
         "detail": "O título da tarefa não pode ser vazio.",
         "code": "invalid_task_title",
