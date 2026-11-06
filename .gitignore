@@ -92,3 +92,6 @@ Thumbs.db
 # Project Specific
 # ============================================================================
 # Add project-specific ignores here
+
+# Banco local (SQLite)
+*.db
