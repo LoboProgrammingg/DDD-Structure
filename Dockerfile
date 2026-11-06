@@ -1,86 +1,41 @@
-# =============================================================================
-# DDD Enterprise Template - Dockerfile
-# =============================================================================
-# Multi-stage build otimizado para produção
-#
-# Stages:
-# 1. builder: Instala dependências e exporta requirements
-# 2. production: Imagem final mínima com apenas o necessário
-#
-# Uso:
-#   docker build -t ddd-template .
-#   docker run -p 8000:8000 ddd-template
-# =============================================================================
+# syntax=docker/dockerfile:1
 
-# -----------------------------------------------------------------------------
-# Stage 1: Builder
-# -----------------------------------------------------------------------------
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
-WORKDIR /build
-
-# Instala Poetry
-ENV POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION="1.7.1" \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1
-
-RUN pip install --no-cache-dir poetry==${POETRY_VERSION}
-
-# Copia arquivos de dependência
-COPY pyproject.toml poetry.lock* ./
-
-# Exporta requirements.txt (sem dev dependencies)
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --without dev
-
-# -----------------------------------------------------------------------------
-# Stage 2: Production
-# -----------------------------------------------------------------------------
-FROM python:3.12-slim as production
-
-# Labels
-LABEL maintainer="your-email@example.com" \
-      version="0.1.0" \
-      description="DDD Enterprise Template"
-
-# Configurações de segurança e performance
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONFAULTHANDLER=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Cria usuário não-root
-RUN groupadd --gid 1000 appgroup && \
-    useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
+ENV POETRY_VERSION=2.1.3 \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
+RUN pip install "poetry==${POETRY_VERSION}"
 
-# Copia requirements do builder
-COPY --from=builder /build/requirements.txt .
+COPY pyproject.toml poetry.lock README.md ./
+RUN poetry install --only main --no-root
 
-# Instala dependências
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src ./src
+RUN poetry install --only main
 
-# Copia código fonte
-COPY --chown=appuser:appgroup src/ ./src/
 
-# Muda para usuário não-root
-USER appuser
+FROM python:3.12-slim AS runtime
 
-# Variáveis de ambiente padrão
-ENV ENVIRONMENT=production \
-    LOG_FORMAT=json \
-    LOG_LEVEL=INFO \
-    API_HOST=0.0.0.0 \
-    API_PORT=8000
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:${PATH}"
 
-# Expose port
+RUN groupadd --system app && useradd --system --gid app --home-dir /app app
+
+WORKDIR /app
+COPY --from=builder --chown=app:app /app/.venv ./.venv
+COPY --chown=app:app src ./src
+COPY --chown=app:app alembic.ini ./
+COPY --chown=app:app migrations ./migrations
+
+USER app
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
 
-# Comando padrão: API
-CMD ["python", "-m", "uvicorn", "app.interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Em produção, prefira rodar as migrações como um job separado do deploy.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.interfaces.api:create_app --factory --host 0.0.0.0 --port 8000"]
