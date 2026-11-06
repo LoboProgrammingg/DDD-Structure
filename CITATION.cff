@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Se este projeto ajudou seu trabalho, cite-o assim."
+title: "DDD Structure"
+abstract: "Referência de Domain-Driven Design em Python: bounded contexts, agregados, eventos de domínio, Unit of Work e arquitetura em camadas verificada por contrato."
+type: software
+authors:
+  - given-names: Matheus Lobo
+    family-names: Camara
+    alias: LoboProgrammingg
+repository-code: "https://github.com/LoboProgrammingg/DDD-Structure"
+url: "https://github.com/LoboProgrammingg/DDD-Structure"
+license: MIT
+version: 1.0.0
+keywords:
+  - domain-driven-design
+  - ddd
+  - clean architecture
+  - fastapi
+  - sqlalchemy
