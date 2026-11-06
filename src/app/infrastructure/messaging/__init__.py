@@ -1,18 +1,3 @@
-"""
-Implementações de mensageria.
+from app.infrastructure.messaging.in_process_event_bus import InProcessEventBus
 
-Contém implementações de publishers e consumers de eventos.
-"""
-
-from app.infrastructure.messaging.event_dispatcher import (
-    AsyncEventDispatcher,
-    EventDispatcher,
-    EventHandler,
-)
-
-
-__all__ = [
-    "EventDispatcher",
-    "AsyncEventDispatcher",
-    "EventHandler",
-]
+__all__ = ["InProcessEventBus"]
