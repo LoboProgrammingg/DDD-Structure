@@ -1,191 +1,91 @@
-# =============================================================================
-# CI Pipeline - GitHub Actions
-# =============================================================================
-# Pipeline completo de CI para o DDD Enterprise Template
-#
-# Jobs:
-# 1. lint: Verifica formatação e linting
-# 2. typecheck: Verifica tipos com MyPy
-# 3. test: Executa testes com coverage
-# 4. build: Verifica que Docker build funciona
-# =============================================================================
-
 name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   PYTHON_VERSION: "3.12"
-  POETRY_VERSION: "1.7.1"
+  POETRY_VERSION: "2.1.3"
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Lint & Format Check
-  # ---------------------------------------------------------------------------
-  lint:
-    name: Lint & Format
+  quality:
+    name: Lint, tipos e arquitetura
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      - name: Instalar Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+      - name: Instalar dependências
         run: poetry install --no-interaction
+      - name: Ruff (lint)
+        run: poetry run ruff check .
+      - name: Ruff (formatação)
+        run: poetry run ruff format --check .
+      - name: Mypy (strict)
+        run: |
+          poetry run mypy
+          poetry run mypy tests
+      - name: Contratos de arquitetura (import-linter)
+        run: poetry run lint-imports
 
-      - name: Run Ruff linter
-        run: poetry run ruff check src/ tests/
-
-      - name: Run Black formatter check
-        run: poetry run black src/ tests/ --check
-
-  # ---------------------------------------------------------------------------
-  # Type Check
-  # ---------------------------------------------------------------------------
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
-
-      - name: Run MyPy
-        run: poetry run mypy src/
-
-  # ---------------------------------------------------------------------------
-  # Tests
-  # ---------------------------------------------------------------------------
   test:
-    name: Tests
+    name: Testes (PostgreSQL)
     runs-on: ubuntu-latest
-
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ddd
+          POSTGRES_PASSWORD: ddd
+          POSTGRES_DB: ddd
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ddd -d ddd"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://ddd:ddd@localhost:5432/ddd
+      DATABASE_URL: postgresql+asyncpg://ddd:ddd@localhost:5432/ddd
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      - name: Instalar Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+      - name: Instalar dependências
         run: poetry install --no-interaction
+      - name: Migrações (upgrade, check, downgrade)
+        run: |
+          poetry run alembic upgrade head
+          poetry run alembic check
+          poetry run alembic downgrade base
+      - name: Testes com cobertura
+        run: poetry run pytest --cov --cov-report=term --cov-report=xml
 
-      - name: Run tests with coverage
-        run: poetry run pytest --cov --cov-report=xml --cov-report=term-missing
-        env:
-          ENVIRONMENT: testing
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
-
-  # ---------------------------------------------------------------------------
-  # Docker Build
-  # ---------------------------------------------------------------------------
-  build:
-    name: Docker Build
+  docker:
+    name: Build da imagem
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test]
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: .
           push: false
-          tags: ddd-template:test
+          tags: ddd-structure:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  # ---------------------------------------------------------------------------
-  # All Checks Passed
-  # ---------------------------------------------------------------------------
-  ci-success:
-    name: CI Success
-    runs-on: ubuntu-latest
-    needs: [lint, typecheck, test, build]
-    if: always()
-
-    steps:
-      - name: Check all jobs passed
-        run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.typecheck.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]] || \
-             [[ "${{ needs.build.result }}" != "success" ]]; then
-            echo "One or more jobs failed"
-            exit 1
-          fi
-          echo "All CI checks passed! ✅"
