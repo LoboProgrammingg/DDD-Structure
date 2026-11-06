@@ -1,4 +1,4 @@
-# ADR 0004: Composition Root para Injeção de Dependências
+# ADR 0004: Composition Root explícito, sem framework de DI
 
 ## Status
 
@@ -6,61 +6,37 @@ Aceito
 
 ## Contexto
 
-Precisamos de um padrão para:
-- Criar e conectar dependências
-- Evitar "new" espalhado pelo código
-- Facilitar testes com mocks/fakes
-- Documentar todas as dependências
+Casos de uso dependem de abstrações (Unit of Work, Clock, NotificationSender).
+Alguém precisa escolher e montar as implementações concretas, de preferência
+em um único lugar e sem espalhar instanciação pelo código.
 
 ## Decisão
 
-Implementamos um **Composition Root** em `bootstrap/container.py`:
+`app/bootstrap/container.py` é o **Composition Root**. O `Container` cria
+engine, session factory, event bus e todos os handlers, e registra as
+inscrições de eventos entre contextos. Fábricas de Unit of Work são
+`functools.partial`, então cada chamada de caso de uso abre sua própria
+transação.
 
 ```python
-@dataclass
-class Container:
-    settings: Settings
-
-    @cached_property
-    def task_repository(self) -> TaskRepository:
-        return InMemoryTaskRepository()
-
-    @cached_property
-    def create_task_use_case(self) -> CreateTaskUseCase:
-        return CreateTaskUseCase(
-            repository=self.task_repository,
-            clock=self.clock,
-            id_generator=self.id_generator,
-        )
+container = Container(settings, notification_sender=SmtpSender(...))
+task_id = await container.create_task(CreateTask(title="Revisar ADRs"))
 ```
 
-### Características
-
-1. **Único ponto de criação**: Todas as dependências aqui
-2. **Lazy loading**: `@cached_property` cria sob demanda
-3. **Singleton por padrão**: Mesma instância reutilizada
-4. **Configurável**: Recebe Settings para adaptar comportamento
-
-## Justificativa
-
-- **Simplicidade**: Não precisa de framework de DI complexo
-- **Explícito**: Fácil ver todas as dependências
-- **Testável**: Crie um container diferente para testes
-- **Python idiomático**: Usa features nativas da linguagem
+A API recebe o container em `create_app(container)` e o expõe via
+`request.app.state`; a CLI cria o seu. Não existe singleton global.
 
 ## Consequências
 
-### Positivas
-- Zero dependências externas para DI
-- Código explícito e fácil de debugar
-- Fácil substituir implementações
+- Todas as dependências do sistema são legíveis em um arquivo.
+- Testes montam um container com outro banco ou outros adaptadores sem
+  monkeypatch.
+- O container cresce com o sistema; quando ficar grande, divida em um
+  módulo de wiring por bounded context.
 
-### Negativas
-- Container pode crescer muito em projetos grandes
-- Sem auto-wiring (precisa configurar manualmente)
+## Alternativas consideradas
 
-## Alternativas Consideradas
-
-- **dependency-injector**: Rejeitado por complexidade
-- **FastAPI Depends**: Específico demais para um caso
-- **Configuração manual em cada arquivo**: Rejeitado por espalhamento
+- **Bibliotecas de DI** (`dependency-injector`, `punq`): mais mágica e mais
+  uma dependência para resolver um problema que construtores já resolvem.
+- **`Depends` do FastAPI em toda a cadeia**: acoplaria a aplicação ao
+  framework web e deixaria a CLI sem o mesmo wiring.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceito
+Substituído por [ADR 0006](0006-repository-contracts-in-domain.md)
 
 ## Contexto
 

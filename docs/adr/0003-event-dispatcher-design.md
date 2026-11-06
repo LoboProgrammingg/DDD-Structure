@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceito
+Substituído por [ADR 0007](0007-unit-of-work-and-post-commit-events.md)
 
 ## Contexto
 

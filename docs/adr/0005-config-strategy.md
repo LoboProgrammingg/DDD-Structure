@@ -1,4 +1,4 @@
-# ADR 0005: Estratégia de Configuração Centralizada
+# ADR 0005: Configuração centralizada com Pydantic Settings
 
 ## Status
 
@@ -6,50 +6,27 @@ Aceito
 
 ## Contexto
 
-Configurações espalhadas pelo código causam:
-- Dificuldade em encontrar o que configurar
-- Valores hardcoded difíceis de mudar
-- Comportamento inconsistente entre ambientes
+Configuração espalhada pelo código gera valores fixos difíceis de mudar,
+comportamento diferente entre ambientes e falhas descobertas tarde.
 
 ## Decisão
 
-Usamos **Pydantic Settings** com configuração centralizada:
+`app/infrastructure/config/settings.py` define um único `Settings`
+(Pydantic Settings), lido de variáveis de ambiente e, opcionalmente, de `.env`.
+Todas as variáveis estão documentadas em `.env.example`.
 
-```python
-# infrastructure/config/settings.py
-class Settings(BaseSettings):
-    app_name: str = "DDD Template"
-    environment: Environment = Environment.DEVELOPMENT
-    log_level: LogLevel = LogLevel.INFO
-    database_url: str = "sqlite:///./app.db"
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=False,
-    )
-```
-
-### Fontes de Configuração (ordem de precedência)
-
-1. Variáveis de ambiente
-2. Arquivo `.env`
-3. Valores padrão no código
-
-## Justificativa
-
-1. **Um lugar só**: Todas as configs em `settings.py`
-2. **Validação**: Pydantic valida tipos no startup
-3. **12-Factor**: Configuração via ambiente
-4. **Documentação**: Settings é auto-documentado
+- Validação no startup: valor inválido derruba a aplicação imediatamente.
+- Segredos nunca têm valor padrão de produção nem ficam versionados.
+- CORS vem desligado (`cors_origins = []`); origens são explícitas.
+- Regras de negócio parametrizáveis (`WORK_IN_PROGRESS_LIMIT`) também passam
+  por aqui e chegam ao domínio pelo composition root.
 
 ## Consequências
 
-### Positivas
-- Fail fast: erros de config detectados no startup
-- Fácil ver todas as opções disponíveis
-- Suporte nativo a `.env` para desenvolvimento
-- Type-safe: IDE ajuda com autocomplete
+- O domínio e a aplicação nunca leem variáveis de ambiente.
+- Testes criam `Settings(...)` com os valores que precisam.
 
-### Negativas
-- Dependência do Pydantic (já usamos, então ok)
-- Precisa reiniciar app para mudar configs
+## Alternativas consideradas
+
+- `os.environ` direto: sem validação e sem documentação central.
+- Arquivos YAML por ambiente: mais um formato para manter, sem ganho real.
