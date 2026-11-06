@@ -374,6 +374,17 @@ Decisões revistas continuam no histórico, marcadas como substituídas.
 
 Veja o [guia de contribuição](CONTRIBUTING.md).
 
+## Autor
+
+**Matheus Lobo** é engenheiro de software, CTO e cofundador da
+[WebFrete](https://webfrete.com/autores/matheus). Trabalha com Python, FastAPI, TypeScript
+e inteligência artificial aplicada, com foco em arquitetura de software e Domain-Driven Design.
+
+- GitHub: [@LoboProgrammingg](https://github.com/LoboProgrammingg)
+- LinkedIn: [Matheus Lobo](https://www.linkedin.com/in/matheuslobocamara)
+- Projeto complementar: [Boas Práticas de Engenharia](https://github.com/LoboProgrammingg/boas-praticas-de-engenharia),
+  guia em português com princípios, arquitetura, testes e segurança, todos com exemplo e teste
+
 ## Licença
 
 [MIT](LICENSE) © Matheus Lobo Camara
