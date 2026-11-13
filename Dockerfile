@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 
 ENV POETRY_VERSION=2.1.3 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -17,7 +17,7 @@ COPY src ./src
 RUN poetry install --only main
 
 
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
